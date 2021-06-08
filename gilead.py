@@ -115,16 +115,20 @@ def write_json(titles_rows_array, copies_rows_array, urls_rows_array, jf):
             print(copies_positions)
             print("{} -> {}".format(ad_copy, index))
             print("PARENT: {} - > {}\n".format(parent, titles_positions[index]))
-            # Add each ad_copy to the "ad_copies" key array
-            json_map['ad_titles'][parent]['ad_copies'].append(ad_copy)
-            # Should look like this inside of "ad_titles": {
-            #   "Ad Title Example": {
-            #       "ad_copies": [
-            #           "Ad Copy Example 1.",
-            #           "Ad Copy Example 2."
-            #       ]
-            #   }
-            # }
+
+            if ad_copy in json_map['ad_titles'][parent]['ad_copies']:
+                continue
+            else:
+                # Add each ad_copy to the "ad_copies" key array
+                json_map['ad_titles'][parent]['ad_copies'].append(ad_copy)
+                # Should look like this inside of "ad_titles": {
+                #   "Ad Title Example": {
+                #       "ad_copies": [
+                #           "Ad Copy Example 1.",
+                #           "Ad Copy Example 2."
+                #       ]
+                #   }
+                # }
 
         for url in csv_urls:
             # If the URL contains 'www.' or '/', strip them
