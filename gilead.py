@@ -9,6 +9,7 @@ csv_file = './{}'.format(input(
 json_file = './generated_authorized.json'
 
 
+# Starts here:
 def parse_csv():
     titles_rows_array = []
     copies_rows_array = []
@@ -25,10 +26,12 @@ def parse_csv():
 
     print("CSV_TITLES ARRAY: {}\n".format(titles_rows_array))
     print("CSV_COPIES ARRAY: {}\n".format(copies_rows_array))
+    # Go-to -> generate_json()
     generate_json(titles_rows_array, copies_rows_array, urls_rows_array)
 
 
-def compare(parents):
+# Called from <- write_json()
+def compare(parents, children):
     jf = json_file
     # './authorizedgeneric_noncompliant_ads.csv'
     nocomply_file = './{}'.format(input(
@@ -61,14 +64,16 @@ def compare(parents):
 
         print("*** NON-COMPLIANT ADS: ***\n")
         print("Non-compliant Ad Titles:")
+
         # This is where the comparison happens:
+
         for index, item in enumerate(titles_to_review):
             title_item_positions.append(index)
 
             # If an item from the titles_to_review array is not
             # present as an "ad_titles" value, print the bad ad
             if item not in json_map['ad_titles']:
-                print("     {} - {}".format(item, copies_to_review[index]))
+                print("     {} - {}".format(item, children[index]))
 
         print("\nNon-compliant Ad Copies:")
         for index, item in enumerate(copies_to_review):
@@ -79,11 +84,20 @@ def compare(parents):
             # If an item from the copies_to_review array is not
             # present as an "ad_copies" value, print the bad ad
             if item not in json_map['ad_titles'][parent]['ad_copies']:
-                print("     {} - {}".format(titles_to_review[index], item))
+                print("     {} - {}".format(parents[index], item))
+
+        print("\nNon-compliant Display URLs:")
+        for url in urls_to_review:
+            if ('www.' in url) or ('/' in url):
+                url = url.strip('w/.')
+
+            if url not in json_map['display_urls']:
+                print("     {}".format(url))
 
         j.close()
 
 
+# Called from <- parse_csv()
 def generate_json(titles_rows_array, copies_rows_array, urls_rows_array):
     jf = json_file
     print("JSON FILE: {}\n".format(jf))
@@ -107,9 +121,11 @@ def generate_json(titles_rows_array, copies_rows_array, urls_rows_array):
         # before the template is written, resulting in a blank file being loaded as
         # json_map and json_map['ad_titles'] won't be found
         j.close()
-        write_json(titles_rows_array, copies_rows_array, urls_rows_array, jf)
+    # Go-to -> write_json()
+    write_json(titles_rows_array, copies_rows_array, urls_rows_array, jf)
 
 
+# Called from <- generate_json()
 def write_json(titles_rows_array, copies_rows_array, urls_rows_array, jf):
     csv_titles = titles_rows_array
     csv_copies = copies_rows_array
@@ -207,7 +223,8 @@ def write_json(titles_rows_array, copies_rows_array, urls_rows_array, jf):
             print(traceback.format_exc(err))
 
         j.close()
-    compare(csv_titles)
+    # Go-to -> compare()
+    compare(csv_titles, csv_copies)
 
 
 parse_csv()
