@@ -3,6 +3,7 @@ import json
 import traceback
 
 # './authorizedgeneric_authorized_ads.csv'
+# TODO: Make file selection better
 csv_file = './{}'.format(input(
     "Step 1: Please tell me the name of your authorized_ads file -> "))
 json_file = './generated_authorized.json'
@@ -17,6 +18,7 @@ def parse_csv():
         csv_map = csv.DictReader(c)
 
         for rows in csv_map:
+            # TODO: Make csv header identification dynamic
             titles_rows_array.append(rows.get("Ad Title"))
             copies_rows_array.append(rows.get("Ad Copy"))
             urls_rows_array.append(rows.get("Display URL"))
@@ -24,6 +26,62 @@ def parse_csv():
     print("CSV_TITLES ARRAY: {}\n".format(titles_rows_array))
     print("CSV_COPIES ARRAY: {}\n".format(copies_rows_array))
     generate_json(titles_rows_array, copies_rows_array, urls_rows_array)
+
+
+def compare(parents):
+    jf = json_file
+    # './authorizedgeneric_noncompliant_ads.csv'
+    nocomply_file = './{}'.format(input(
+        "Step 2: Please tell me the name of your noncompliant_ads file -> "))
+
+    print("\nNO_COMPLY FILE: {}\n".format(nocomply_file))
+
+    titles_to_review = []
+    copies_to_review = []
+    urls_to_review = []
+
+    # TODO: Maybe don't need to re-write all this code?
+    with open(nocomply_file) as n:
+        review_map = csv.DictReader(n)
+
+        for rows in review_map:
+            titles_to_review.append(rows.get("Ad Title"))
+            copies_to_review.append(rows.get("Ad Copy"))
+            urls_to_review.append(rows.get("Display URL"))
+
+        print("TITLES_TO_REVIEW ARRAY: {}\n".format(titles_to_review))
+        print("COPIES_TO_REVIEW ARRAY: {}\n".format(copies_to_review))
+
+        n.close()
+
+    with open(jf, "r+", encoding="utf-8") as j:
+        json_map = json.load(j)
+        title_item_positions = []
+        copy_item_position = []
+
+        print("*** NON-COMPLIANT ADS: ***\n")
+        print("Non-compliant Ad Titles:")
+        # This is where the comparison happens:
+        for index, item in enumerate(titles_to_review):
+            title_item_positions.append(index)
+
+            # If an item from the titles_to_review array is not
+            # present as an "ad_titles" value, print the bad ad
+            if item not in json_map['ad_titles']:
+                print("     {} - {}".format(item, copies_to_review[index]))
+
+        print("\nNon-compliant Ad Copies:")
+        for index, item in enumerate(copies_to_review):
+            # A parent is an ad_title with matching array index from csv_titles array
+            parent = parents[index]
+            copy_item_position.append(index)
+
+            # If an item from the copies_to_review array is not
+            # present as an "ad_copies" value, print the bad ad
+            if item not in json_map['ad_titles'][parent]['ad_copies']:
+                print("     {} - {}".format(titles_to_review[index], item))
+
+        j.close()
 
 
 def generate_json(titles_rows_array, copies_rows_array, urls_rows_array):
@@ -149,51 +207,7 @@ def write_json(titles_rows_array, copies_rows_array, urls_rows_array, jf):
             print(traceback.format_exc(err))
 
         j.close()
+    compare(csv_titles)
 
 
 parse_csv()
-
-
-def compare():
-    jf = json_file
-    # './authorizedgeneric_noncompliant_ads.csv'
-    nocomply_file = './{}'.format(input(
-        "Step 2: Please tell me the name of your noncompliant_ads file -> "))
-
-    print("\nNO_COMPLY FILE: {}\n".format(nocomply_file))
-
-    titles_to_review = []
-    copies_to_review = []
-    urls_to_review = []
-
-    with open(nocomply_file) as n:
-        review_map = csv.DictReader(n)
-
-        for rows in review_map:
-            titles_to_review.append(rows.get("Ad Title"))
-            copies_to_review.append(rows.get("Ad Copy"))
-            urls_to_review.append(rows.get("Display URL"))
-
-        print("TITLES_TO_REVIEW ARRAY: {}\n".format(titles_to_review))
-        print("COPIES_TO_REVIEW ARRAY: {}\n".format(copies_to_review))
-
-        n.close()
-
-    with open(jf, "r+", encoding="utf-8") as j:
-        json_map = json.load(j)
-        item_positions = []
-        print("*** NON-COMPLIANT ADS: ***")
-
-        # This is where the comparison happens:
-        for index, item in enumerate(titles_to_review):
-            item_positions.append(index)
-
-            # If an item from the titles_to_review array is not
-            # present as an "ad_titles" value, print the bad ad
-            if item not in json_map['ad_titles']:
-                print("{} - {}".format(item, copies_to_review[index]))
-
-        j.close()
-
-
-compare()
